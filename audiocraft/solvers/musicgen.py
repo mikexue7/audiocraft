@@ -27,6 +27,7 @@ from ..utils.cache import CachedBatchWriter, CachedBatchLoader
 from ..utils.samples.manager import SampleManager
 from ..utils.utils import get_dataset_from_loader, is_jsonable, warn_once
 
+from peft import LoraModel, LoraConfig, get_peft_model
 
 class MusicGenSolver(base.StandardSolver):
     """Solver for MusicGen training task.
@@ -139,6 +140,10 @@ class MusicGenSolver(base.StandardSolver):
         if self.cfg.fsdp.use:
             assert not self.cfg.autocast, "Cannot use autocast with fsdp"
             self.model = self.wrap_with_fsdp(self.model)
+        # LoRA
+        config = LoraConfig(r=16, target_modules=['k_proj', 'q_proj', 'v_proj', 'out_proj'], lora_alpha=32, lora_dropout=0.01)
+
+        self.model = get_peft_model(self.model, config)
         self.register_ema('model')
         # initialize optimization
         self.optimizer = builders.get_optimizer(builders.get_optim_parameter_groups(self.model), self.cfg.optim)

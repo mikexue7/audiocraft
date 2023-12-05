@@ -1,13 +1,12 @@
 # @package __global__
 
 # This is the training loop solver
-# for the melody MusicGen model (text+chroma to music)
+# for the base MusicGen model (text-to-music)
 # on monophonic audio sampled at 32 kHz
 defaults:
   - musicgen/default
   - /model: lm/musicgen_lm
-  - override /conditioner: chroma2music
-  - override /dset: audio/currents
+  - override /dset: audio/default
   - _self_
 
 autocast: true
@@ -26,7 +25,7 @@ deadlock:
   use: true  # deadlock detection
 
 dataset:
-  batch_size: 1  # 32 GPUs
+  batch_size: 192  # 32 GPUs
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
 
@@ -37,7 +36,7 @@ generate:
     top_p: 0.0
 
 optim:
-  epochs: 5
+  epochs: 500
   optimizer: dadam
   lr: 1
   ema:
