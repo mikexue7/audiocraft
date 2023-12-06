@@ -31,6 +31,8 @@ import audiocraft
 from . import builders
 from .encodec import CompressionModel
 
+from peft import LoraConfig, get_peft_model
+
 
 def get_audiocraft_cache_dir() -> tp.Optional[str]:
     return os.environ.get('AUDIOCRAFT_CACHE_DIR', None)
@@ -49,7 +51,8 @@ def _get_state_dict(
     assert isinstance(file_or_url_or_id, str)
 
     if os.path.isfile(file_or_url_or_id):
-        return torch.load(file_or_url_or_id, map_location=device)
+        # return torch.load(file_or_url_or_id, map_location=device)
+        return torch.load(file_or_url_or_id, map_location=device)["model"] # eddie's change
 
     if os.path.isdir(file_or_url_or_id):
         file = f"{file_or_url_or_id}/{filename}"
@@ -101,6 +104,7 @@ def _delete_param(cfg: DictConfig, full_name: str):
 
 
 def load_lm_model(file_or_url_or_id: tp.Union[Path, str], device='cpu', cache_dir: tp.Optional[str] = None):
+    print(file_or_url_or_id) # eddie's change
     pkg = load_lm_model_ckpt(file_or_url_or_id, cache_dir=cache_dir)
     cfg = OmegaConf.create(pkg['xp.cfg'])
     cfg.device = str(device)
@@ -112,7 +116,14 @@ def load_lm_model(file_or_url_or_id: tp.Union[Path, str], device='cpu', cache_di
     _delete_param(cfg, 'conditioners.args.merge_text_conditions_p')
     _delete_param(cfg, 'conditioners.args.drop_desc_p')
     model = builders.get_lm_model(cfg)
-    model.load_state_dict(pkg['best_state'])
+
+    config = LoraConfig(r=8, target_modules=[f'linears.{i}' for i in range(4)])
+
+    model = get_peft_model(model, config)
+    # model = PeftModel.from_pretrained(model, peft_model_id)
+    # merged_model = model.merge_and_unload()
+    model.load_state_dict(pkg['best_state']) # load state dict for PEFT model, saved at file_or_url_or_id
+    model = model.merge_and_unload() # turn back into base model
     model.eval()
     model.cfg = cfg
     return model

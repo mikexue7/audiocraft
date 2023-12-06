@@ -28,6 +28,7 @@ from ..utils.samples.manager import SampleManager
 from ..utils.utils import get_dataset_from_loader, is_jsonable, warn_once
 
 from peft import LoraModel, LoraConfig, get_peft_model
+import pdb
 
 class MusicGenSolver(base.StandardSolver):
     """Solver for MusicGen training task.
@@ -141,9 +142,10 @@ class MusicGenSolver(base.StandardSolver):
             assert not self.cfg.autocast, "Cannot use autocast with fsdp"
             self.model = self.wrap_with_fsdp(self.model)
         # LoRA
-        config = LoraConfig(r=16, target_modules=['k_proj', 'q_proj', 'v_proj', 'out_proj'], lora_alpha=32, lora_dropout=0.01)
+        config = LoraConfig(r=8, target_modules=[f'linears.{i}' for i in range(4)])
 
         self.model = get_peft_model(self.model, config)
+        
         self.register_ema('model')
         # initialize optimization
         self.optimizer = builders.get_optimizer(builders.get_optim_parameter_groups(self.model), self.cfg.optim)
@@ -177,6 +179,17 @@ class MusicGenSolver(base.StandardSolver):
         self.logger.info("LM model:")
         self.log_model_summary(self.model)
 
+    def print_trainable_parameters(self, model):
+        trainable_params = 0
+        all_param = 0
+        for _, param in model.named_parameters():
+            all_param += param.numel()
+            if param.requires_grad:
+                trainable_params += param.numel()
+        print(
+            f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param:.2f}"
+        )
+
     def load_state_dict(self, state: dict) -> None:
         if 'condition_provider' in state:
             model_state = state['model']
@@ -187,8 +200,21 @@ class MusicGenSolver(base.StandardSolver):
                 assert key not in model_state
                 model_state[key] = value
         super().load_state_dict(state)
+        # print(self.model)
+        # # for name, layer in self.model.named_parameters():
+        # #     print(name)
+        # # for name, module in self.model.named_modules():
+        # #     print(name)
+        # config = LoraConfig(r=8, target_modules=[f'linears.{i}' for i in range(4)]) #+ ['out_proj'])#, 'out_proj'])# 'out_proj']) #lora_alpha=32, lora_dropout=0.01)
+
+        # self.model = get_peft_model(self.model, config)
+        # self.print_trainable_parameters(self.model)
+        # torch.save({'best_state': {'model': self.model.state_dict()}}, f'/home/michaelxue/audiocraft/checkpoints/lora_lm_small.th')
+        # print("saved checkpoint")
+        # pdb.set_trace()
 
     def load_from_pretrained(self, name: str):
+        print("PRETRAINED CALLED HERE!")
         # TODO: support native HF versions of MusicGen.
         lm_pkg = models.loaders.load_lm_model_ckpt(name)
         state: dict = {
@@ -701,6 +727,7 @@ class MusicGenSolver(base.StandardSolver):
 
     def evaluate(self) -> dict:
         """Evaluate stage."""
+        # self.model = self.model.merge_and_unload()
         self.model.eval()
         with torch.no_grad():
             metrics: dict = {}

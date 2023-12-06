@@ -1,11 +1,11 @@
 from audiocraft.models import MusicGen
 from audiocraft.data.audio import audio_write
 
-model = MusicGen.get_pretrained("/home/eddiediller/audiocraft/checkpoints/my_audio_lm/")
+model = MusicGen.get_pretrained("/home/michaelxue/audiocraft/checkpoints/my_audio_lm")
 #model = MusicGen.get_pretrained("facebook/musicgen-small")
 model.set_generation_params(duration=8)  # generate 8 seconds.
 
-descriptions = ["Synth-heavy psychedelic and disco-infused pop.", "Synth-heavy psychedelic and disco-infused pop."]
+descriptions = ["Synth-heavy psychedelic and disco-infused pop like S*.", "Synth-heavy psychedelic and disco-infused pop."]
 
 wav = model.generate(descriptions)  # generates 1 samples.
 

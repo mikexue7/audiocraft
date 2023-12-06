@@ -47,10 +47,10 @@ venv/
 ENV/
 
 # egs with manifest files
-egs/*
+# egs/*
 !egs/example
 # local datasets
-dataset/*
+# dataset/*
 !dataset/example
 
 # personal notebooks & scripts
