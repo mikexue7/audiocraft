@@ -150,9 +150,9 @@ class MusicGenSolver(base.StandardSolver):
         for name, module in self.model.named_modules():
             if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
                 modules.append(name)
-        #     # else:
-        #     #     for param in module.parameters():
-        #     #         param.requires_grad = True # set non-LoRA parameters to be trainable
+            # else:
+            #     for param in module.parameters():
+            #         param.requires_grad = True # set non-LoRA parameters to be trainable
         # modules = [f'linears.{i}' for i in range(4)]
         config = LoraConfig(r=16, target_modules=modules)
 
@@ -218,8 +218,9 @@ class MusicGenSolver(base.StandardSolver):
 
         # self.model = PeftModel(self.model, config)
 
-        # torch.save({'best_state': {'model': self.model.state_dict()}}, f'/home/michaelxue/audiocraft/checkpoints/lora_lm_small_test4.th')
+        # torch.save({'best_state': {'model': self.model.state_dict()}}, f'/home/michaelxue/audiocraft/checkpoints/lora_lm_med_test.th')
         # print("saved checkpoint")
+        # pdb.set_trace()
         # for i, (name, param) in enumerate(self.model.named_parameters()):
         #     print(f"Layer: {name}, Size: {param.size()}, Values: {param.data}")
         #     pdb.set_trace()
