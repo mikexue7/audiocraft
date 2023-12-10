@@ -29,7 +29,7 @@ dataset:
     num_samples: 500
   generate:
     num_samples: 1
-  batch_size: 1  # 32 GPUs
+  batch_size: 2  # 32 GPUs
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
 
@@ -40,7 +40,7 @@ generate:
     top_p: 0.0
 
 optim:
-  epochs: 1
+  epochs: 5
   optimizer: dadam
   lr: 1
   updates_per_epoch: 400

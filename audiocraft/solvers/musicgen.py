@@ -27,7 +27,7 @@ from ..utils.cache import CachedBatchWriter, CachedBatchLoader
 from ..utils.samples.manager import SampleManager
 from ..utils.utils import get_dataset_from_loader, is_jsonable, warn_once
 
-from peft import LoraModel, LoraConfig, get_peft_model
+from peft import LoraModel, LoraConfig, get_peft_model, PeftModel
 import pdb
 
 class MusicGenSolver(base.StandardSolver):
@@ -141,10 +141,27 @@ class MusicGenSolver(base.StandardSolver):
         if self.cfg.fsdp.use:
             assert not self.cfg.autocast, "Cannot use autocast with fsdp"
             self.model = self.wrap_with_fsdp(self.model)
-        # LoRA
-        config = LoraConfig(r=8, target_modules=[f'linears.{i}' for i in range(4)])
 
-        self.model = get_peft_model(self.model, config)
+        # for i, (name, param) in enumerate(self.model.named_parameters()):
+        #     print(f"Layer: {name}, Size: {param.size()}, Values: {param.data}")
+        #     pdb.set_trace()
+        # LoRA
+        modules = []
+        for name, module in self.model.named_modules():
+            if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
+                modules.append(name)
+        #     # else:
+        #     #     for param in module.parameters():
+        #     #         param.requires_grad = True # set non-LoRA parameters to be trainable
+        # modules = [f'linears.{i}' for i in range(4)]
+        config = LoraConfig(r=16, target_modules=modules)
+
+        # # # self.model = get_peft_model(self.model, config)
+        self.model = PeftModel(self.model, config)
+
+        # for _, param in self.model.named_parameters():
+        #     param.requires_grad = True
+        self.print_trainable_parameters(self.model)
         
         self.register_ema('model')
         # initialize optimization
@@ -190,7 +207,26 @@ class MusicGenSolver(base.StandardSolver):
             f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param:.2f}"
         )
 
+    def convert_to_lora_model(self):
+        print("converting to lora!")
+        # modules = []
+        # for name, module in self.model.named_modules():
+        #     if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
+        #         modules.append(name)
+        # # modules = [f'linears.{i}' for i in range(4)]
+        # config = LoraConfig(r=16, target_modules=modules) #+ ['out_proj'])#, 'out_proj'])# 'out_proj']) #lora_alpha=32, lora_dropout=0.01)
+
+        # self.model = PeftModel(self.model, config)
+
+        # torch.save({'best_state': {'model': self.model.state_dict()}}, f'/home/michaelxue/audiocraft/checkpoints/lora_lm_small_test4.th')
+        # print("saved checkpoint")
+        # for i, (name, param) in enumerate(self.model.named_parameters()):
+        #     print(f"Layer: {name}, Size: {param.size()}, Values: {param.data}")
+        #     pdb.set_trace()
+
     def load_state_dict(self, state: dict) -> None:
+        print("in load state dict")
+        # pdb.set_trace()
         if 'condition_provider' in state:
             model_state = state['model']
             condition_provider_state = state.pop('condition_provider')
@@ -200,18 +236,6 @@ class MusicGenSolver(base.StandardSolver):
                 assert key not in model_state
                 model_state[key] = value
         super().load_state_dict(state)
-        # print(self.model)
-        # # for name, layer in self.model.named_parameters():
-        # #     print(name)
-        # # for name, module in self.model.named_modules():
-        # #     print(name)
-        # config = LoraConfig(r=8, target_modules=[f'linears.{i}' for i in range(4)]) #+ ['out_proj'])#, 'out_proj'])# 'out_proj']) #lora_alpha=32, lora_dropout=0.01)
-
-        # self.model = get_peft_model(self.model, config)
-        # self.print_trainable_parameters(self.model)
-        # torch.save({'best_state': {'model': self.model.state_dict()}}, f'/home/michaelxue/audiocraft/checkpoints/lora_lm_small.th')
-        # print("saved checkpoint")
-        # pdb.set_trace()
 
     def load_from_pretrained(self, name: str):
         print("PRETRAINED CALLED HERE!")
@@ -610,6 +634,7 @@ class MusicGenSolver(base.StandardSolver):
     def train(self):
         """Train stage.
         """
+        self.print_trainable_parameters(self.model)
         if self._cached_batch_writer is not None:
             self._cached_batch_writer.start_epoch(self.epoch)
         if self._cached_batch_loader is None:

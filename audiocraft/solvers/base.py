@@ -486,10 +486,14 @@ class StandardSolver(ABC, flashy.BaseSolver):
                 if self.should_run_stage('generate'):
                     self.run_stage('generate', with_rank_rng()(self.generate))
 
+    def convert_to_lora_model(self):
+        pass
+        
     def run(self):
         """Training loop."""
         assert len(self.state_dict()) > 0
         self.restore(replay_metrics=True)  # load checkpoint and replay history
+        self.convert_to_lora_model()
         self.log_hyperparams(dict_from_config(self.cfg))
         for epoch in range(self.epoch, self.cfg.optim.epochs + 1):
             if self.should_stop_training():
