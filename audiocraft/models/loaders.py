@@ -31,7 +31,7 @@ import audiocraft
 from . import builders
 from .encodec import CompressionModel
 
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model, PeftModel
 
 
 def get_audiocraft_cache_dir() -> tp.Optional[str]:
@@ -104,7 +104,6 @@ def _delete_param(cfg: DictConfig, full_name: str):
 
 
 def load_lm_model(file_or_url_or_id: tp.Union[Path, str], device='cpu', cache_dir: tp.Optional[str] = None):
-    print(file_or_url_or_id) # eddie's change
     pkg = load_lm_model_ckpt(file_or_url_or_id, cache_dir=cache_dir)
     cfg = OmegaConf.create(pkg['xp.cfg'])
     cfg.device = str(device)
@@ -117,13 +116,28 @@ def load_lm_model(file_or_url_or_id: tp.Union[Path, str], device='cpu', cache_di
     _delete_param(cfg, 'conditioners.args.drop_desc_p')
     model = builders.get_lm_model(cfg)
 
-    config = LoraConfig(r=8, target_modules=[f'linears.{i}' for i in range(4)])
+    # modules = []
+    # Model 1 (finetune final four linear layers)
+    # modules = [f'linears.{i}' for i in range(4)]
+    # Model 2 (finetune all linear layers)
+    # for name, module in model.named_modules():
+    #     if isinstance(module, torch.nn.Linear):
+    #         modules.append(name)
+    # Model 3 (finetune just embedding layers)
+    # for name, module in model.named_modules():
+    #     if isinstance(module, torch.nn.Embedding):
+    #         modules.append(name)
+    # Model 4 (finetune all linear/embedding layers)
+    # for name, module in model.named_modules():
+    #     if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
+    #         modules.append(name)
+    
+    # config = LoraConfig(r=16, target_modules=modules)
 
-    model = get_peft_model(model, config)
-    # model = PeftModel.from_pretrained(model, peft_model_id)
-    # merged_model = model.merge_and_unload()
+    # model = get_peft_model(model, config)
+
     model.load_state_dict(pkg['best_state']) # load state dict for PEFT model, saved at file_or_url_or_id
-    model = model.merge_and_unload() # turn back into base model
+    # model = model.merge_and_unload() # turn back into base model
     model.eval()
     model.cfg = cfg
     return model

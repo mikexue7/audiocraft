@@ -1,6 +1,6 @@
 from audiocraft.utils import export
 from audiocraft import train
-xp = train.main.get_xp_from_sig('7883aae7')
+xp = train.main.get_xp_from_sig('33fd1f20')
 export.export_lm(xp.folder / 'checkpoint.th', '/home/michaelxue/audiocraft/checkpoints/my_audio_lm/state_dict.bin')
 # You also need to bundle the EnCodec model you used !!
 

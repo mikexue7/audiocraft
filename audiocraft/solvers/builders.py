@@ -349,6 +349,7 @@ def get_audio_datasets(cfg: omegaconf.DictConfig,
         else:
             raise ValueError(f"Dataset type is unsupported: {dataset_type}")
 
+        print(dataset, num_samples)
         loader = get_loader(
             dataset,
             num_samples,

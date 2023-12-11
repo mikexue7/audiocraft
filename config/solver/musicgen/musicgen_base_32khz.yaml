@@ -25,8 +25,10 @@ deadlock:
   use: true  # deadlock detection
 
 dataset:
+  evaluate:
+    num_samples: 10
   valid:
-    num_samples: 500
+    num_samples: 10
   generate:
     num_samples: 1
   batch_size: 4  # 32 GPUs
@@ -40,10 +42,10 @@ generate:
     top_p: 0.0
 
 optim:
-  epochs: 1
+  epochs: 10
   optimizer: dadam
   lr: 1
-  updates_per_epoch: 400
+  updates_per_epoch: 15
   ema:
     use: true
     updates: 10
@@ -58,3 +60,41 @@ schedule:
     warmup: 4000
     lr_min_ratio: 0.0
     cycle_length: 1.0
+
+metrics:
+  fad:
+    use_gt: false
+    model: tf
+    tf:
+      bin: null  # path to local frechet_audio_distance code
+      model_path: //reference/fad/vggish_model.ckpt
+  kld:
+    use_gt: false
+    model: passt
+    passt:
+      pretrained_length: 20
+  text_consistency:
+    use_gt: false
+    model: clap
+    clap:
+      model_path: //reference/clap/music_audioset_epoch_15_esc_90.14.pt
+      model_arch: 'HTSAT-base'
+      enable_fusion: false
+  chroma_cosine:
+    use_gt: false
+    model: chroma_base
+    chroma_base:
+      sample_rate: ${sample_rate}
+      n_chroma: 12
+      radix2_exp: 14
+      argmax: true
+
+evaluate:
+  every: 10
+  num_workers: 5
+  metrics:
+    base: false
+    fad: false
+    kld: true
+    text_consistency: false
+    chroma_cosine: true

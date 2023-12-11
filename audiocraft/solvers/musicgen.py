@@ -29,6 +29,7 @@ from ..utils.utils import get_dataset_from_loader, is_jsonable, warn_once
 
 from peft import LoraModel, LoraConfig, get_peft_model, PeftModel
 import pdb
+import sys
 
 class MusicGenSolver(base.StandardSolver):
     """Solver for MusicGen training task.
@@ -142,25 +143,29 @@ class MusicGenSolver(base.StandardSolver):
             assert not self.cfg.autocast, "Cannot use autocast with fsdp"
             self.model = self.wrap_with_fsdp(self.model)
 
-        # for i, (name, param) in enumerate(self.model.named_parameters()):
-        #     print(f"Layer: {name}, Size: {param.size()}, Values: {param.data}")
-        #     pdb.set_trace()
         # LoRA
-        modules = []
-        for name, module in self.model.named_modules():
-            if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
-                modules.append(name)
-            # else:
-            #     for param in module.parameters():
-            #         param.requires_grad = True # set non-LoRA parameters to be trainable
+        # Model 0 (finetune everything without LoRA)
+        # rest are with LoRA
+        # modules = []
+        # # # Model 1 (finetune final four linear layers)
         # modules = [f'linears.{i}' for i in range(4)]
-        config = LoraConfig(r=16, target_modules=modules)
+        # # Model 2 (finetune all linear layers)
+        # for name, module in self.model.named_modules():
+        #     if isinstance(module, torch.nn.Linear):
+        #         modules.append(name)
+        # # Model 3 (finetune just embedding layers)
+        # for name, module in self.model.named_modules():
+        #     if isinstance(module, torch.nn.Embedding):
+        #         modules.append(name)
+        # # Model 4 (finetune all linear/embedding layers)
+        # for name, module in self.model.named_modules():
+        #     if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
+        #         modules.append(name)
+        
+        # config = LoraConfig(r=16, target_modules=modules)
 
-        # # # self.model = get_peft_model(self.model, config)
-        self.model = PeftModel(self.model, config)
-
-        # for _, param in self.model.named_parameters():
-        #     param.requires_grad = True
+        # self.model = get_peft_model(self.model, config)
+        # # self.model = PeftModel(self.model, config)
         self.print_trainable_parameters(self.model)
         
         self.register_ema('model')
@@ -208,22 +213,34 @@ class MusicGenSolver(base.StandardSolver):
         )
 
     def convert_to_lora_model(self):
-        print("converting to lora!")
+        print("Converting to LoRA!")
+        # LoRA
+        # Model 0 (finetune everything without LoRA)
+        # rest are with LoRA
         # modules = []
+        # # # Model 1 (finetune final four linear layers)
+        # modules = [f'linears.{i}' for i in range(4)]
+        # # # Model 2 (finetune all linear layers)
+        # for name, module in self.model.named_modules():
+        #     if isinstance(module, torch.nn.Linear):
+        #         modules.append(name)
+        # # # Model 3 (finetune just embedding layers)
+        # for name, module in self.model.named_modules():
+        #     if isinstance(module, torch.nn.Embedding):
+        #         modules.append(name)
+        # # # Model 4 (finetune all linear/embedding layers)
         # for name, module in self.model.named_modules():
         #     if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
         #         modules.append(name)
-        # # modules = [f'linears.{i}' for i in range(4)]
-        # config = LoraConfig(r=16, target_modules=modules) #+ ['out_proj'])#, 'out_proj'])# 'out_proj']) #lora_alpha=32, lora_dropout=0.01)
+        
+        # config = LoraConfig(r=16, target_modules=modules)
 
-        # self.model = PeftModel(self.model, config)
+        # self.model = get_peft_model(self.model, config)
+        # # # self.model = PeftModel(self.model, config)
 
-        # torch.save({'best_state': {'model': self.model.state_dict()}}, f'/home/michaelxue/audiocraft/checkpoints/lora_lm_med_test.th')
-        # print("saved checkpoint")
-        # pdb.set_trace()
-        # for i, (name, param) in enumerate(self.model.named_parameters()):
-        #     print(f"Layer: {name}, Size: {param.size()}, Values: {param.data}")
-        #     pdb.set_trace()
+        # torch.save({'best_state': {'model': self.model.state_dict()}}, f'/home/michaelxue/audiocraft/checkpoints/lora_lm_4.th')
+        # print("Saved checkpoint!")
+        # sys.exit(0)
 
     def load_state_dict(self, state: dict) -> None:
         print("in load state dict")

@@ -87,7 +87,6 @@ def get_lm_model(cfg: omegaconf.DictConfig) -> LMModel:
     """Instantiate a transformer LM."""
     if cfg.lm_model == 'transformer_lm':
         kwargs = dict_from_config(getattr(cfg, 'transformer_lm'))
-        print(kwargs)
         n_q = kwargs['n_q']
         q_modeling = kwargs.pop('q_modeling', None)
         codebooks_pattern_cfg = getattr(cfg, 'codebooks_pattern')

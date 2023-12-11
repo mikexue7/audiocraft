@@ -23,6 +23,8 @@ from ..utils.deadlock import DeadlockDetect
 from ..utils.profiler import Profiler
 from ..utils.utils import copy_state, dict_from_config, model_hash, with_rank_rng
 
+import time
+
 
 class StandardSolver(ABC, flashy.BaseSolver):
     """Standard solver for AudioCraft.
@@ -495,12 +497,18 @@ class StandardSolver(ABC, flashy.BaseSolver):
         self.restore(replay_metrics=True)  # load checkpoint and replay history
         self.convert_to_lora_model()
         self.log_hyperparams(dict_from_config(self.cfg))
+        start_time = time.time()
         for epoch in range(self.epoch, self.cfg.optim.epochs + 1):
             if self.should_stop_training():
                 return
             self.run_epoch()
             # Commit will send the metrics to Dora and save checkpoints by default.
             self.commit()
+        end_time = time.time()
+        elapsed_time = (end_time - start_time) / 60
+        print(f"Start Time of Training: {start_time}")
+        print(f"End Time of Training: {end_time}")
+        print(f"Elapsed Time of Training: {elapsed_time:.3f} minutes")
 
     def should_stop_training(self) -> bool:
         """Check whether we should stop training or not."""
@@ -528,6 +536,7 @@ class StandardSolver(ABC, flashy.BaseSolver):
            and isinstance(loader.sampler, torch.utils.data.distributed.DistributedSampler):
             loader.sampler.set_epoch(self.epoch)
         updates_per_epoch = self.train_updates_per_epoch if self.is_training else len(loader)
+        print(updates_per_epoch)
         if self.cfg.benchmark_no_load:
             self.logger.warning("Fake loading for benchmarking: re-using first batch")
             batch = next(iter(loader))
