@@ -22,10 +22,10 @@ base_descriptions = ["Synth-heavy psychedelic and disco-infused pop.",
                     ]
 
 descriptions = ["Synth-heavy psychedelic and disco-infused pop like <TI>.",
-                "Synth-heavy psychedelic and disco-infused pop like <TI>."
-                "Synth-heavy psychedelic and disco-infused pop like <TI>."
-                "Synth-heavy psychedelic and disco-infused pop like <TI>."
-                "Synth-heavy psychedelic and disco-infused pop like <TI>."
+                "Synth-heavy psychedelic and disco-infused pop like <TI>.",
+                "Synth-heavy psychedelic and disco-infused pop like <TI>.",
+                "Synth-heavy psychedelic and disco-infused pop like <TI>.",
+                "Synth-heavy psychedelic and disco-infused pop like <TI>.",
                 "A jazzy masterpiece with bluesy vibes and psychedelic hues in the style of <TI>.",
                 "Reggae rhythms meet the dreamy sounds of a psychedelic island groove with a <TI> touch.",
                 "Chillhop beats in a kaleidoscopic world, making it groove and soothe simultaneously with the vibes of <TI>.",
