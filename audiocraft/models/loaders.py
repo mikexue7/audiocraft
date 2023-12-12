@@ -116,7 +116,7 @@ def load_lm_model(file_or_url_or_id: tp.Union[Path, str], device='cpu', cache_di
     _delete_param(cfg, 'conditioners.args.drop_desc_p')
     model = builders.get_lm_model(cfg)
 
-    # modules = []
+    modules = []
     # Model 1 (finetune final four linear layers)
     # modules = [f'linears.{i}' for i in range(4)]
     # Model 2 (finetune all linear layers)
@@ -128,16 +128,16 @@ def load_lm_model(file_or_url_or_id: tp.Union[Path, str], device='cpu', cache_di
     #     if isinstance(module, torch.nn.Embedding):
     #         modules.append(name)
     # Model 4 (finetune all linear/embedding layers)
-    # for name, module in model.named_modules():
-    #     if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
-    #         modules.append(name)
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Linear) or isinstance(module, torch.nn.Embedding):
+            modules.append(name)
     
-    # config = LoraConfig(r=16, target_modules=modules)
+    config = LoraConfig(r=16, target_modules=modules)
 
-    # model = get_peft_model(model, config)
+    model = get_peft_model(model, config)
 
     model.load_state_dict(pkg['best_state']) # load state dict for PEFT model, saved at file_or_url_or_id
-    # model = model.merge_and_unload() # turn back into base model
+    model = model.merge_and_unload() # turn back into base model
     model.eval()
     model.cfg = cfg
     return model

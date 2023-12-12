@@ -2,10 +2,14 @@ from audiocraft.models import MusicGen
 from audiocraft.data.audio import audio_write
 
 model = MusicGen.get_pretrained("/home/michaelxue/audiocraft/checkpoints/my_audio_lm") # finetuned model
-#model = MusicGen.get_pretrained("facebook/musicgen-small") # baseline model
+# model = MusicGen.get_pretrained("facebook/musicgen-small") # baseline model
 model.set_generation_params(duration=15, temperature=1.0)  # generate 15 seconds.
 
 base_descriptions = ["Synth-heavy psychedelic and disco-infused pop.",
+                     "Synth-heavy psychedelic and disco-infused pop.",
+                     "Synth-heavy psychedelic and disco-infused pop.",
+                     "Synth-heavy psychedelic and disco-infused pop.",
+                     "Synth-heavy psychedelic and disco-infused pop.",
                      "A jazzy masterpiece with bluesy vibes and psychedelic hues.",
                      "Reggae rhythms meet the dreamy sounds of a psychedelic island groove.",
                      "Chillhop beats in a kaleidoscopic world, making it groove and soothe simultaneously.",
@@ -18,6 +22,10 @@ base_descriptions = ["Synth-heavy psychedelic and disco-infused pop.",
                     ]
 
 descriptions = ["Synth-heavy psychedelic and disco-infused pop like <TI>.",
+                "Synth-heavy psychedelic and disco-infused pop like <TI>."
+                "Synth-heavy psychedelic and disco-infused pop like <TI>."
+                "Synth-heavy psychedelic and disco-infused pop like <TI>."
+                "Synth-heavy psychedelic and disco-infused pop like <TI>."
                 "A jazzy masterpiece with bluesy vibes and psychedelic hues in the style of <TI>.",
                 "Reggae rhythms meet the dreamy sounds of a psychedelic island groove with a <TI> touch.",
                 "Chillhop beats in a kaleidoscopic world, making it groove and soothe simultaneously with the vibes of <TI>.",
@@ -29,10 +37,10 @@ descriptions = ["Synth-heavy psychedelic and disco-infused pop like <TI>.",
                 "An experimental noise adventure, in the spirit of <TI>, pushing the boundaries in a psychedelic cacophony."
                ]
 
-names = ["pop", "jazz", "reggae", "chillhop", "country", "classical", "rock", "hiphop", "indie", "noise"]
+names = ["pop1", "pop2", "pop3", "pop4", "pop5", "jazz", "reggae", "chillhop", "country", "classical", "rock", "hiphop", "indie", "noise"]
 
-wav = model.generate(base_descriptions)  # generates samples.
+wav = model.generate(descriptions)  # generates samples.
 
 for idx, one_wav in enumerate(wav):
     # Will save under {idx}.wav, with loudness normalization at -14 db LUFS.
-    audio_write(f'model_0_out/{names[idx]}', one_wav.cpu(), model.sample_rate, strategy="loudness")
+    audio_write(f'model_4_out/{names[idx]}', one_wav.cpu(), model.sample_rate, strategy="loudness")
